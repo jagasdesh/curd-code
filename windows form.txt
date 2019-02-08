@@ -1,0 +1,380 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Data.SqlClient;
+using System.IO;
+//CURD Application-Create,Update,Read,Delete data form database.
+namespace WindowsFormsApplication2
+{
+    public partial class Form1 : Form
+    {
+        //SQL Connection for to connect the MYSQL server.
+        //Global decleration.
+        SqlConnection con = new SqlConnection(@"Data Source=NSCHN030\SQLEXPRESS;Initial Catalog=DevPractice;User ID=prac;Password=practice");
+        DataTable dt = new DataTable();
+        int i, j;
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        //Insert employee details into employee table.
+        private void button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (validate())
+                {
+                    SqlCommand emp = new SqlCommand("INSERT INTO employee(empid,empname,empmailid,empcompany)values(@empid, @empname,@empmailid,@empcompany)", con);
+                    con.Open();
+                    emp.Parameters.AddWithValue("@empid", maskedTextBox1.Text);
+                    emp.Parameters.AddWithValue("@empname", maskedTextBox2.Text);
+                    emp.Parameters.AddWithValue("@empmailid", maskedTextBox3.Text);
+                    emp.Parameters.AddWithValue("@empcompany", maskedTextBox4.Text);
+                    emp.ExecuteNonQuery();
+                    MessageBox.Show("Datainserted successfully");
+                    dataGridView2.Update();
+                    dataGridView2.Refresh();
+                  
+                 
+                    cleartextbox();
+
+
+                }
+                else
+                {
+                    MessageBox.Show("Insert data properly");
+                }
+            }
+            catch (Exception y)
+            {
+                MessageBox.Show("Enter Unique ID");
+
+            }
+            finally
+            {
+                con.Close();
+                display();
+            }
+
+
+        }
+
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            display();
+            DataGridViewButtonColumn bcol = new DataGridViewButtonColumn();
+            bcol.HeaderText = "Edit ";
+            bcol.Text = "Edit";
+            bcol.Name = "Edit";
+            bcol.UseColumnTextForButtonValue = true;
+            dataGridView2.Columns.Add(bcol);
+
+
+            DataGridViewButtonColumn bco2 = new DataGridViewButtonColumn();
+            bco2.HeaderText = "Delete ";
+            bco2.Text = "Delete";
+            bco2.Name = "Delete";
+            bco2.UseColumnTextForButtonValue = true;
+            dataGridView2.Columns.Add(bco2);
+        
+
+          
+       
+
+
+        }
+        private void Delete_Click(Object sender, EventArgs e)
+        {
+            delete();
+
+        }
+
+       
+
+        //Update employee table.
+        private void button3_Click(object sender, EventArgs e)
+        {
+           
+            try
+            {
+                con.Open();
+                SqlCommand emp = new SqlCommand("update EMPLOYEE SET empid= @empid ,empname=@empname,empmailid=@empmailid,empcompany=@empcompany WHERE empid =@empid", con);
+                emp.Parameters.AddWithValue("@empid", maskedTextBox1.Text);
+                emp.Parameters.AddWithValue("@empname", maskedTextBox2.Text);
+                emp.Parameters.AddWithValue("@empmailid", maskedTextBox3.Text);
+                emp.Parameters.AddWithValue("@empcompany", maskedTextBox4.Text);
+                SqlDataReader sr = emp.ExecuteReader();
+                dt.Load(sr);
+                dataGridView2.DataSource = dt;
+                MessageBox.Show("Dataupdated Sucessfully");
+                con.Close();
+                cleartextbox();
+            }
+            catch (Exception t)
+            {
+                MessageBox.Show(t.ToString());
+            }
+            finally
+            {
+                con.Close();
+                display();
+            }
+
+
+        }
+
+        //Click event-Dispaly the values in the respective textbox for the selected row.
+        private void dataGridView2_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+            try
+            {
+
+                if (e.RowIndex >= 0 && e.ColumnIndex == 4)
+                {
+                    i = 1;
+
+                    DataGridViewRow row = this.dataGridView2.Rows[e.RowIndex];
+                    maskedTextBox1.Text = row.Cells[0].Value.ToString();
+                    maskedTextBox2.Text = row.Cells[1].Value.ToString();
+                    maskedTextBox3.Text = row.Cells[2].Value.ToString();
+                    maskedTextBox4.Text = row.Cells[3].Value.ToString();
+                 
+                }
+                else if(e.ColumnIndex ==5)
+                {
+                    DataGridViewRow row = this.dataGridView2.Rows[e.RowIndex];
+                    maskedTextBox1.Text = row.Cells[0].Value.ToString();
+                    maskedTextBox2.Text = row.Cells[1].Value.ToString();
+                    maskedTextBox3.Text = row.Cells[2].Value.ToString();
+                    maskedTextBox4.Text = row.Cells[3].Value.ToString();
+                    delete();
+                }
+            }
+            catch (Exception r)
+            {
+                Console.WriteLine("click", r);
+            }
+            finally
+            {
+                con.Close();
+            }
+         
+
+        }
+
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+
+
+        }
+        //Function to clear data in the textbox for each operation.
+        public void cleartextbox()
+        {
+            maskedTextBox1.Text = "";
+            maskedTextBox2.Text = "";
+            maskedTextBox3.Text = "";
+            maskedTextBox4.Text = "";
+        }
+
+        public Boolean validate()
+        {
+            if (maskedTextBox1.Text != "" && maskedTextBox2.Text != "" && maskedTextBox3.Text != "" && maskedTextBox4.Text != "")
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        private void maskedTextBox3_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
+        {
+
+        }
+
+        private void maskedTextBox1_MaskInputRejected(object sender, MaskInputRejectedEventArgs e)
+        {
+
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            cleartextbox();
+        }
+        //Delete employee from the employee table for the selected row.
+        public void delete()
+        {
+
+            DialogResult dr = MessageBox.Show("Are you sure to delete row?", "Confirmation", MessageBoxButtons.YesNo);
+            if (dr == DialogResult.Yes)
+            {
+                try
+                {
+
+                    con.Open();
+                    SqlCommand emp = new SqlCommand("delete from employee  where empid= @empid ", con);
+                    emp.Parameters.AddWithValue("@empid", maskedTextBox1.Text);
+                    SqlDataReader sr = emp.ExecuteReader();
+                    dt.Load(sr);
+
+                    dataGridView2.DataSource = dt;
+
+                    con.Close();
+                    cleartextbox();
+
+                }
+                catch (Exception t)
+                {
+                    Console.WriteLine("display", t);
+                }
+                finally
+                {
+                    con.Close();
+                    display();
+                }
+            }
+            else
+            {
+                cleartextbox();
+            }
+
+        }
+        public void display()
+        {
+            if (con.State == ConnectionState.Closed)
+            {
+                con.Open();
+                try
+                {
+                    dt.Rows.Clear();
+                    dt.Columns.Clear();
+
+
+                    SqlCommand emp = new SqlCommand("select *from employee", con);
+                    SqlDataReader sr = emp.ExecuteReader();
+                    dt.Load(sr);
+                    dataGridView2.DataSource = dt;
+                    cleartextbox();
+                    foreach (DataGridViewRow row in dataGridView2.Rows)
+
+                        if (row.Index % 2 == 0)
+                        {
+                            row.DefaultCellStyle.BackColor = Color.WhiteSmoke;
+                        }
+                }
+                catch (Exception t)
+                {
+                    MessageBox.Show(t.ToString());
+                }
+                finally
+                {
+                    con.Close();
+                }
+
+            }
+          
+        }
+       
+
+        private void maskedTextBox1_Validating(object sender, CancelEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(maskedTextBox1.Text))
+            {
+                e.Cancel = true;
+                maskedTextBox1.Focus();
+                errorProvider1.SetError(maskedTextBox1, "id should not be left blank!");
+            }
+            else
+            {
+                e.Cancel = false;
+                errorProvider1.SetError(maskedTextBox1, "");
+            }  
+        }
+        public void update()
+        {
+           
+                try
+                {
+
+                    con.Open();
+                    SqlCommand emp = new SqlCommand("update EMPLOYEE SET empid= @empid ,empname=@empname,empmailid=@empmailid,Email=@empcompany WHERE empid =@empid", con);
+                    emp.Parameters.AddWithValue("@empid", maskedTextBox1.Text);
+                    emp.Parameters.AddWithValue("@empname", maskedTextBox2.Text);
+                    emp.Parameters.AddWithValue("@empmailid", maskedTextBox3.Text);
+                    emp.Parameters.AddWithValue("@empcompany", maskedTextBox4.Text);
+                    SqlDataReader sr = emp.ExecuteReader();
+                    dt.Load(sr);
+                    dataGridView2.DataSource = dt;
+                    MessageBox.Show("Dataupdated Sucessfully");
+                    cleartextbox();
+                }
+                catch (Exception t)
+                {
+                    MessageBox.Show(t.ToString());
+                }
+                finally
+                {
+                    display();
+                    con.Close();
+
+                }
+            }
+
+        private void maskedTextBox1_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyValue < 48 || e.KeyValue > 57) { }
+               // e.SuppressKeyPress = true;
+
+        }
+
+        private void maskedTextBox2_Validating(object sender, CancelEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(maskedTextBox2.Text))
+            {
+                e.Cancel = true;
+                maskedTextBox2.Focus();
+                errorProvider1.SetError(maskedTextBox2, "Name should not be left blank!");
+            }
+            else
+            {
+                e.Cancel = false;
+                errorProvider1.SetError(maskedTextBox2, "");
+            }  
+        }
+        public static bool WriteLog(string strFileName, string strMessage)
+        {
+            try
+            {
+                FileStream objFilestream = new FileStream(string.Format("{0}\\{1}", "D://", strFileName), FileMode.Append, FileAccess.Write);
+                StreamWriter objStreamWriter = new StreamWriter((Stream)objFilestream);
+                objStreamWriter.WriteLine(strMessage);
+               
+                objStreamWriter.Close();
+                objFilestream.Close();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        } 
+           
+        }
+        
+    }  
+        
+         
+    
+
+

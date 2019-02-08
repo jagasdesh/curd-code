@@ -1,0 +1,88 @@
+using System;
+
+
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+
+using System.IO;
+
+namespace WebApplication3
+{
+    public partial class WebForm1 : System.Web.UI.Page
+    {
+        SqlConnection con = new SqlConnection(@"Data Source=NSCHN030\SQLEXPRESS;Initial Catalog=DevPractice;User ID=prac;Password=practice");
+        DataTable dt = new DataTable();
+
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+                SqlCommand emp = new SqlCommand("INSERT INTO employee(empid,empname,empmailid,empcompany)values(@empid, @empname,@empmailid,@empcompany)", con);
+                con.Open();
+                emp.Parameters.AddWithValue("@empid", TextBox3.Text);
+                emp.Parameters.AddWithValue("@empname", TextBox4.Text);
+                emp.Parameters.AddWithValue("@empmailid", TextBox5.Text);
+                emp.Parameters.AddWithValue("@empcompany", TextBox6.Text);
+
+                emp.ExecuteNonQuery();
+                GridView1.DataBind();
+
+            }
+            catch (Exception u)
+            {
+                string script = "alert(\"enter valid id number!\");";
+                ScriptManager.RegisterStartupScript(this, GetType(),
+                                      "ServerControlScript", script, true);
+            }
+
+        }
+       
+
+        protected void GridView1_RowDeleting1(object sender, GridViewDeleteEventArgs e)
+        {
+            try
+            {
+
+                con.Open();
+                SqlCommand emp = new SqlCommand("delete from employee  where empid= @empid ", con);
+                emp.Parameters.AddWithValue("@empid", (TextBox)GridView1.Rows[e.RowIndex].FindControl("Textbox3"));
+                SqlDataReader sr = emp.ExecuteReader();
+                GridView1.DataBind();
+            }
+            catch (Exception t)
+            {
+                Console.WriteLine("display", t);
+            }
+            finally
+            {
+                con.Close();
+
+            }
+        }
+
+        
+
+       
+
+    }
+
+
+}
